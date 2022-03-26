@@ -1,0 +1,136 @@
+#!ipxe
+
+set boot-url http://${next-server}
+
+# Some menu defaults
+set menu-timeout 50000
+set submenu-timeout ${menu-timeout}
+isset ${menu-default} || set menu-default exit
+set esc:hex 1b
+set bold ${esc:string}[1m
+set orange ${esc:string}[33;0m
+set yellow ${esc:string}[33;1m
+set cyan ${esc:string}[36;1m
+set resetfg ${esc:string}[39m
+set resetbg ${esc:string}[49m
+set resetbold ${esc:string}[22m
+set reset ${esc:string}[0m
+
+isset ${menu-default} || set menu-default exit
+
+# Figure out if client is 64-bit capable
+cpuid --ext 29 && set arch x86_64 || set arch x86
+cpuid --ext 29 && set archb 64 || set archb 32
+cpuid --ext 29 && set archl x86_64 || set archl i386
+
+# Set graphics mode and configure colours
+#console --x 800 --y 600 --picture menu.png
+#colour --basic 3 --rgb 0xffaa44 3
+#cpair --foreground 0 --background 3 2
+#cpair --foreground 3 3
+set chotkey ${bold}
+set cname ${orange}
+
+######## MAIN MENU ###################
+
+:start
+menu iPXE boot menu for ${manufacturer} ${product} (${archb}bit)
+
+item --gap 		Windows
+item mdt 		Boot MDT Deployment
+item win2008_x64	Boot Windows Server 2008 x64 ISO
+item win2003		Boot Windows Server 2003 R2 x86 ISO
+item winxp_x86		Boot Windows XP SP3 x86 ISO
+item win2000		Boot Windows 2000 x86 ISO
+item winnt4		Boot Windows NT 4 x86 ISO
+
+item --gap 		Ubuntu
+item ubuntu_focal 	Boot into Ubuntu 20.04 LTS installer
+
+item --gap 		Tools
+item netboot 		Boot into netboot.xyz menu
+item hirens		Boot into Hirens BootCD
+
+item --gap 		Advanced
+item config      	Configure settings
+item shell       	Enter iPXE shell
+item reboot      	Reboot
+item exit     		Exit
+
+choose --default mdt --timeout 30000 target && goto ${target}
+
+############ MAIN MENU ITEMS ############
+
+############ WINDOWS ############
+
+:mdt
+imgfree
+kernel ${boot-url}/wimboot
+initrd ${boot-url}/boot/BCD BCD
+initrd ${boot-url}/boot/boot.sdi boot.sdi
+initrd ${boot-url}/sources/mdt/${arch}/boot.wim boot.wim
+boot
+
+:win2008_x64
+imgfree
+initrd ${boot-url}/isos/winsrv2008_x64.iso
+chain memdisk iso raw
+
+:win2003
+imgfree
+initrd ${boot-url}/isos/winsrv2003_x86.iso
+chain memdisk iso raw
+
+:winxp_x86
+imgfree
+initrd ${boot-url}/isos/winxp_sp3_x86.iso
+chain memdisk iso raw
+
+:win2000
+imgfree
+initrd ${boot-url}/isos/win2000_x86.iso
+chain memdisk iso raw
+
+:winnt4
+imgfree
+initrd ${boot-url}/isos/winnt4_x86.iso
+chain memdisk iso raw
+
+############ UBUNTU ############
+
+:ubuntu_focal
+imgfree
+set base-url http://archive.ubuntu.com/ubuntu/dists/focal/main/installer-amd64/current/legacy-images/netboot/ubuntu-installer/amd64
+kernel ${base-url}/linux
+initrd ${base-url}/initrd.gz
+boot
+
+############ TOOLS ############
+
+:netboot
+imgfree
+chain --autofree http://boot.netboot.xyz
+
+:hirens
+imgfree
+kernel ${boot-url}/wimboot
+initrd ${boot-url}/boot/bootmgr.exe bootmgr.exe
+initrd ${boot-url}/boot/BCD BCD
+initrd ${boot-url}/boot/boot.sdi boot.sdi
+initrd ${boot-url}/sources/hirens/x86_64/boot.wim boot.wim
+boot
+
+############ OTHER ############
+
+:reboot
+reboot
+
+:config
+config
+goto start
+
+:shell
+echo Type exit to get the back to the menu
+shell
+set menu-timeout 0
+goto start
