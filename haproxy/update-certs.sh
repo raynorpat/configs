@@ -4,8 +4,7 @@
 certbot renew --force-renewal
 
 # Concatenate new cert files, with less output (avoiding the use tee and its output to stdout)
-bash -c "cat /etc/letsencrypt/live/raynorpat.com/fullchain.pem /etc/letsencrypt/live/raynorpat.com/privkey.pem > /etc/haproxy/raynorpat.com.pem"
-bash -c "cat /etc/letsencrypt/live/flamingent.com/fullchain.pem /etc/letsencrypt/live/flamingent.com/privkey.pem > /etc/haproxy/flamingent.com.pem"
+bash -c "cat /etc/letsencrypt/live/raynornet.xyz/fullchain.pem /etc/letsencrypt/live/raynornet.xyz/privkey.pem > /etc/haproxy/raynornet.xyz.pem"
 
 # Reload  HAProxy
 service haproxy reload
